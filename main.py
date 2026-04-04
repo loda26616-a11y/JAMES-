@@ -1,7 +1,8 @@
 import os
 import logging
+import asyncio
 from flask import Flask, request
-from telegram import Update, Bot
+from telegram import Update
 from telegram.ext import (
     Application,
     ChatJoinRequestHandler,
@@ -10,14 +11,14 @@ from telegram.ext import (
     filters,
 )
 
-# 🔥 ENV VARIABLES
+# 🔥 ENV
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID"))
 
-# 🔥 USERS STORAGE
+# 🔥 USERS
 users = set()
 
-# 🔥 APK DATA
+# 🔥 APK
 APK_LINK = "https://raw.githubusercontent.com/loda26616-a11y/JAMES-/1db4bc6a4a7b78311162a7c798e49147eaa4a3e7/JAMES%20INJECTION%20HACK_1.0_0%20(1).apk"
 
 APK_CAPTION = """
@@ -31,17 +32,17 @@ APK_CAPTION = """
 FOR HELP @M4JAMES_HACK_MANAGER
 """
 
-# 🔥 LOGGING
+# 🔥 LOG
 logging.basicConfig(level=logging.INFO)
 
-# 🔥 FLASK APP
+# 🔥 FLASK
 app = Flask(__name__)
 
-# 🔥 TELEGRAM APPLICATION
+# 🔥 TELEGRAM APP
 application = Application.builder().token(BOT_TOKEN).build()
 
 
-# ✅ JOIN REQUEST HANDLER
+# ✅ JOIN REQUEST
 async def approve_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         user = update.chat_join_request.from_user
@@ -51,13 +52,11 @@ async def approve_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         users.add(user.id)
 
-        # Welcome msg
         await context.bot.send_message(
             chat_id=user.id,
             text="✨ WELCOME TO JAMES PREMIUM BOT ✨\n\nAccess Granted 🚀"
         )
 
-        # Send APK
         await context.bot.send_document(
             chat_id=user.id,
             document=APK_LINK,
@@ -102,26 +101,29 @@ application.add_error_handler(error_handler)
 
 
 # ✅ WEBHOOK ROUTE
-@app.route(f"/webhook", methods=["POST"])
+@app.route("/webhook", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), application.bot)
     application.update_queue.put_nowait(update)
     return "ok"
 
 
-# ✅ HOME ROUTE (IMPORTANT FOR RENDER)
+# ✅ HOME ROUTE
 @app.route("/")
 def home():
-    return "Bot is running 🚀"
+    return "Bot running 🚀"
 
 
-# 🔥 START APP
+# 🔥 START BOT (ASYNC FIXED)
+async def start_bot():
+    await application.initialize()
+    await application.start()
+
+
+# 🔥 MAIN
 if __name__ == "__main__":
     PORT = int(os.environ.get("PORT", 10000))
 
-    # start telegram app (no polling)
-    application.initialize()
-    application.start()
+    asyncio.get_event_loop().run_until_complete(start_bot())
 
-    # run flask
     app.run(host="0.0.0.0", port=PORT)
