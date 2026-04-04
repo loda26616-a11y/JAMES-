@@ -24,6 +24,9 @@ APK_CAPTION = """
 FOR HELP @M4JAMES_HACK_MANAGER
 """
 
+# 🔥 RAW APK LINK
+APK_LINK = "https://raw.githubusercontent.com/loda26616-a11y/JAMES-/1db4bc6a4a7b78311162a7c798e49147eaa4a3e7/JAMES%20INJECTION%20HACK_1.0_0%20(1).apk"
+
 
 # ✅ Join Request Auto Approve
 async def approve_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -42,21 +45,18 @@ async def approve_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text="✨ WELCOME TO JAMES PREMIUM BOT ✨\n\nAccess Granted 🚀"
         )
 
-        # ✅ APK SEND (FIXED)
-        file_path = os.path.join(os.getcwd(), "JAMES INJECTION HACK_1.0_0 (1).apk")
-
-        with open(file_path, "rb") as apk:
-            await context.bot.send_document(
-                chat_id=user.id,
-                document=apk,
-                caption=APK_CAPTION
-            )
+        # ✅ Send APK via RAW LINK
+        await context.bot.send_document(
+            chat_id=user.id,
+            document=APK_LINK,
+            caption=APK_CAPTION
+        )
 
     except Exception as e:
-        print(f"APK Error: {e}")
+        print(f"Error in approve_request: {e}")
 
 
-# ✅ Broadcast
+# ✅ Broadcast (only admin)
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         if update.effective_user.id != ADMIN_ID:
