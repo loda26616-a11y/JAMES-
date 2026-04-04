@@ -3,22 +3,25 @@ from telegram.ext import ApplicationBuilder, ContextTypes, ChatJoinRequestHandle
 from telegram.error import NetworkError, TimedOut, RetryAfter
 import json
 import os
+import sys
 import asyncio
 import requests
 from io import BytesIO
 from datetime import datetime
 
+# Force unbuffered output so logs show instantly
+sys.stdout.reconfigure(line_buffering=True)
+
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 APK_URL = os.environ.get("APK_URL")
 
-USERS_FILE = "telegram-bot/users.json"
+USERS_FILE = "users.json"
 
 DM_LINK = "https://t.me/M4JAMES_HACK_MANAGER?text=HELLO%20JAMES%20BHAI%20MUJHE%20LOSS%20RECOVER%20KRWANA%20HAI"
 VIP_BUTTON = InlineKeyboardMarkup([
     [InlineKeyboardButton("VIP CHANNEL LINK ❤️✨", url=DM_LINK)]
 ])
 
-# APK cached at startup
 APK_CACHE = None
 
 
@@ -58,13 +61,13 @@ def fetch_apk_at_startup():
         print("WARNING: APK_URL not set — APK will not be sent.")
         return
     try:
-        print(f"[{datetime.now()}] Downloading APK from GitHub at startup...")
+        print(f"Downloading APK from GitHub...")
         response = requests.get(APK_URL, timeout=120)
         response.raise_for_status()
         APK_CACHE = response.content
-        print(f"[{datetime.now()}] APK cached successfully ({len(APK_CACHE)} bytes)")
+        print(f"APK cached successfully ({len(APK_CACHE)} bytes)")
     except Exception as e:
-        print(f"[{datetime.now()}] Failed to download APK: {e}")
+        print(f"Failed to download APK: {e}")
         APK_CACHE = None
 
 
@@ -75,6 +78,7 @@ async def join_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for attempt in range(3):
         try:
             await context.bot.approve_chat_join_request(chat_id, user.id)
+            print(f"Approved: {user.id} (@{user.username})")
 
             users = load_users()
             add_user(user, users)
@@ -101,49 +105,38 @@ async def join_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     ),
                     reply_markup=VIP_BUTTON
                 )
-                print(f"[{datetime.now()}] APK sent to user: {user.id}")
+                print(f"APK sent to: {user.id}")
             else:
-                print(f"[{datetime.now()}] APK not sent (cache empty) to user: {user.id}")
+                print(f"APK cache empty, not sent to: {user.id}")
 
-            print(f"[{datetime.now()}] Approved user: {user.id} (@{user.username})")
             break
 
         except RetryAfter as e:
-            print(f"Rate limited, waiting {e.retry_after} seconds...")
+            print(f"Rate limited, waiting {e.retry_after}s...")
             await asyncio.sleep(e.retry_after)
         except (NetworkError, TimedOut) as e:
-            print(f"Network error (attempt {attempt + 1}/3): {e}")
+            print(f"Network error attempt {attempt + 1}/3: {e}")
             if attempt < 2:
                 await asyncio.sleep(5)
         except Exception as e:
-            print(f"Error handling join request for {user.id}: {e}")
+            print(f"Error for {user.id}: {e}")
             break
 
 
 def main():
     if not BOT_TOKEN:
-        print("Error: BOT_TOKEN not set")
+        print("ERROR: BOT_TOKEN not set")
         import time
         time.sleep(30)
         return
 
+    print(f"[{datetime.now()}] Starting bot...")
     fetch_apk_at_startup()
 
-    print(f"[{datetime.now()}] Bot starting...")
-
-    app = (
-        ApplicationBuilder()
-        .token(BOT_TOKEN)
-        .get_updates_pool_timeout(30)
-        .get_updates_read_timeout(30)
-        .get_updates_write_timeout(30)
-        .get_updates_connect_timeout(30)
-        .build()
-    )
-
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(ChatJoinRequestHandler(join_request))
 
-    print(f"[{datetime.now()}] Bot running (polling) — waiting for join requests...")
+    print(f"[{datetime.now()}] Bot running (polling)...")
 
     app.run_polling(
         drop_pending_updates=True,
@@ -156,10 +149,10 @@ if __name__ == "__main__":
         try:
             main()
         except KeyboardInterrupt:
-            print("Bot stopped by user")
+            print("Bot stopped.")
             break
         except Exception as e:
-            print(f"[{datetime.now()}] Bot crashed: {e}")
-            print("Restarting in 10 seconds...")
+            print(f"[{datetime.now()}] Crashed: {e}")
+            print("Restarting in 10s...")
             import time
             time.sleep(10)
