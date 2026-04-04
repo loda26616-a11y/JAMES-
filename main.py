@@ -100,8 +100,7 @@ async def join_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         "✅ 100% NUMBER HACK 💥\n\n"
                         "( ONLY FOR PREMIUM USERS ⚡️ )\n"
                         "( 100% LOSS RECOVER GUARANTEE ⚡️ )\n\n"
-                        "𝐇𝐎𝐖 𝐓𝐎 𝐔𝐒𝐄 𝐇𝐀𝐂𝐊 :- https://t.me/HOW_TO_USE_JAMES_HACK/12
-                \n"
+                        "HOW TO USE HACK - \nhttps://t.me/HOW TO USE JAMES HACK/12"
                         "FOR HELP @M4JAMES_HACK_MANAGER"
                     ),
                     reply_markup=VIP_BUTTON
