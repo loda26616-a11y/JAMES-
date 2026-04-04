@@ -84,7 +84,8 @@ def main():
 
     print("✅ Bot Started...")
 
-    app.run_polling()
+    # 🔥 FIXED POLLING (conflict avoid)
+    app.run_polling(drop_pending_updates=True)
 
 
 if __name__ == "__main__":
