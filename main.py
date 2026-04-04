@@ -43,7 +43,7 @@ async def approve_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         # send APK
-        with open("JAMES INJECTION HACK_1.0_0 (1).apk", "rb") as apk:
+        with open("app.apk", "rb") as apk:
             await context.bot.send_document(
                 chat_id=user.id,
                 document=apk,
