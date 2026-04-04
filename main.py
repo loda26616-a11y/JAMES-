@@ -1,6 +1,12 @@
 import os
 from telegram import Update
-from telegram.ext import Application, ChatJoinRequestHandler, MessageHandler, ContextTypes, filters
+from telegram.ext import (
+    ApplicationBuilder,
+    ChatJoinRequestHandler,
+    MessageHandler,
+    ContextTypes,
+    filters,
+)
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID"))
@@ -19,60 +25,62 @@ FOR HELP @M4JAMES_HACK_MANAGER
 """
 
 
-# Join Request Auto Approve
+# ✅ Join Request Auto Approve
 async def approve_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
-    user = update.chat_join_request.from_user
-    chat_id = update.chat_join_request.chat.id
-
-    # approve join request
-    await context.bot.approve_chat_join_request(chat_id, user.id)
-
-    users.add(user.id)
-
-    # welcome message
-    await context.bot.send_message(
-        chat_id=user.id,
-        text="✨ WELCOME TO JAMES PREMIUM BOT ✨\n\nAccess Granted 🚀"
-    )
-
-    # send APK
     try:
+        user = update.chat_join_request.from_user
+        chat_id = update.chat_join_request.chat.id
+
+        # approve join request
+        await context.bot.approve_chat_join_request(chat_id, user.id)
+
+        users.add(user.id)
+
+        # send welcome message in DM
+        await context.bot.send_message(
+            chat_id=user.id,
+            text="✨ WELCOME TO JAMES PREMIUM BOT ✨\n\nAccess Granted 🚀"
+        )
+
+        # send APK
         with open("JAMES NUMBER PANEL HACK_1.0_2.1.apk", "rb") as apk:
             await context.bot.send_document(
                 chat_id=user.id,
                 document=apk,
                 caption=APK_CAPTION
             )
+
     except Exception as e:
-        print(e)
+        print(f"Error in approve_request: {e}")
 
 
-# Broadcast message
+# ✅ Broadcast message (only admin)
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        if update.effective_user.id != ADMIN_ID:
+            return
 
-    if update.effective_user.id != ADMIN_ID:
-        return
+        for user_id in users:
+            try:
+                await context.bot.copy_message(
+                    chat_id=user_id,
+                    from_chat_id=update.effective_chat.id,
+                    message_id=update.message.id
+                )
+            except Exception as e:
+                print(f"Broadcast error to {user_id}: {e}")
 
-    for user_id in users:
-        try:
-            await context.bot.copy_message(
-                chat_id=user_id,
-                from_chat_id=update.effective_chat.id,
-                message_id=update.message.id
-            )
-        except:
-            pass
+    except Exception as e:
+        print(f"Broadcast main error: {e}")
 
 
 def main():
-
-    app = Application.builder().token(BOT_TOKEN).build()
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     app.add_handler(ChatJoinRequestHandler(approve_request))
     app.add_handler(MessageHandler(filters.ALL, broadcast))
 
-    print("Bot Started...")
+    print("✅ Bot Started...")
 
     app.run_polling()
 
