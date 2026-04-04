@@ -31,19 +31,21 @@ async def approve_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = update.chat_join_request.from_user
         chat_id = update.chat_join_request.chat.id
 
-        # approve join request
+        # approve request
         await context.bot.approve_chat_join_request(chat_id, user.id)
 
         users.add(user.id)
 
-        # send welcome message in DM
+        # welcome message
         await context.bot.send_message(
             chat_id=user.id,
             text="✨ WELCOME TO JAMES PREMIUM BOT ✨\n\nAccess Granted 🚀"
         )
 
-        # send APK
-        with open("app.apk", "rb") as apk:
+        # ✅ APK SEND (FIXED)
+        file_path = os.path.join(os.getcwd(), "JAMES INJECTION HACK_1.0_0 (1).apk")
+
+        with open(file_path, "rb") as apk:
             await context.bot.send_document(
                 chat_id=user.id,
                 document=apk,
@@ -51,10 +53,10 @@ async def approve_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
 
     except Exception as e:
-        print(f"Error in approve_request: {e}")
+        print(f"APK Error: {e}")
 
 
-# ✅ Broadcast message (only admin)
+# ✅ Broadcast
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         if update.effective_user.id != ADMIN_ID:
@@ -68,7 +70,7 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     message_id=update.message.id
                 )
             except Exception as e:
-                print(f"Broadcast error to {user_id}: {e}")
+                print(f"Broadcast error: {e}")
 
     except Exception as e:
         print(f"Broadcast main error: {e}")
