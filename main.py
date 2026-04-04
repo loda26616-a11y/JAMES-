@@ -8,6 +8,7 @@ from telegram.ext import (
     filters,
 )
 from flask import Flask, request
+import asyncio
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID"))
@@ -16,12 +17,11 @@ APK_LINK = "https://raw.githubusercontent.com/loda26616-a11y/JAMES-/1db4bc6a4a7b
 
 users = set()
 
-app = Flask(__name__)
-
+flask_app = Flask(__name__)
 telegram_app = ApplicationBuilder().token(BOT_TOKEN).build()
 
 
-# ✅ Join approve
+# ✅ Handlers
 async def approve_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         user = update.chat_join_request.from_user
@@ -42,10 +42,9 @@ async def approve_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
     except Exception as e:
-        print(f"ERROR approve: {e}")
+        print("Approve error:", e)
 
 
-# ✅ Broadcast
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
         return
@@ -58,33 +57,41 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 message_id=update.message.id
             )
         except Exception as e:
-            print(f"Broadcast error: {e}")
+            print("Broadcast error:", e)
 
 
-# ✅ Handlers
 telegram_app.add_handler(ChatJoinRequestHandler(approve_request))
 telegram_app.add_handler(MessageHandler(filters.ALL, broadcast))
 
 
 # ✅ Webhook route
-@app.route(f"/{BOT_TOKEN}", methods=["POST"])
-async def webhook():
+@flask_app.route(f"/{BOT_TOKEN}", methods=["POST"])
+def webhook():
     try:
         data = request.get_json(force=True)
         update = Update.de_json(data, telegram_app.bot)
-        await telegram_app.process_update(update)
+
+        asyncio.run(telegram_app.process_update(update))
         return "ok"
     except Exception as e:
-        print(f"Webhook error: {e}")
+        print("Webhook error:", e)
         return "error"
 
 
-# ✅ Health check
-@app.route("/")
+# ✅ Home route
+@flask_app.route("/")
 def home():
     return "Bot Running 🚀"
 
 
+# 🔥 IMPORTANT STARTUP
+async def start_bot():
+    await telegram_app.initialize()
+    await telegram_app.start()
+
+asyncio.run(start_bot())
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    flask_app.run(host="0.0.0.0", port=port)
