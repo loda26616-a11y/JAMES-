@@ -17,11 +17,6 @@ APK_URL = os.environ.get("APK_URL")
 
 USERS_FILE = "users.json"
 
-DM_LINK = "https://t.me/M4JAMES_HACK_MANAGER?text=HELLO%20JAMES%20BHAI%20MUJHE%20LOSS%20RECOVER%20KRWANA%20HAI"
-VIP_BUTTON = InlineKeyboardMarkup([
-    [InlineKeyboardButton("VIP CHANNEL LINK ❤️✨", url=DM_LINK)]
-])
-
 APK_CACHE = None
 
 
@@ -73,39 +68,33 @@ def fetch_apk_at_startup():
 
 async def join_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.chat_join_request.from_user
-    chat_id = update.chat_join_request.chat.id
 
     for attempt in range(3):
         try:
-            await context.bot.approve_chat_join_request(chat_id, user.id)
-            print(f"Approved: {user.id} (@{user.username})")
-
             users = load_users()
             add_user(user, users)
 
             await context.bot.send_message(
                 chat_id=user.id,
-                text="🚀🔥 𝗪𝗘𝗟𝗖𝗢𝗠𝗘 𝗧𝗢 𝗝𝗔𝗠𝗘𝗦 𝗧𝗥𝗔𝗗𝗘𝗥𝗦 𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗕𝗢𝗧 🔥",
-                reply_markup=VIP_BUTTON
+                text="🚀🔥 𝗪𝗘𝗟𝗖𝗢𝗠𝗘 𝗧𝗢 𝗝𝗔𝗠𝗘𝗦 𝗧𝗥𝗔𝗗𝗘𝗥𝗦 𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗕𝗢𝗧 🔥"
             )
 
             if APK_CACHE:
                 apk_file = BytesIO(APK_CACHE)
-                apk_file.name = "JAMES PREMIUM INJECTOR HACK.apk"
+                apk_file.name = "JAMES INJECTION HACK_1.0_0 (1).apk"
                 await context.bot.send_document(
                     chat_id=user.id,
                     document=apk_file,
-                    filename="JAMES PREMIUM INJECTOR HACK.apk",
+                    filename="JAMES INJECTION HACK_1.0_0 (1).apk",
                     caption=(
                         "✅ 100% NUMBER HACK 💥\n\n"
                         "( ONLY FOR PREMIUM USERS ⚡️ )\n"
                         "( 100% LOSS RECOVER GUARANTEE ⚡️ )\n\n"
-                        "HOW TO USE - https://t.me/HOW_TO_USE_JAMES_HACK/12\n"
+                        "𝐇𝐎𝐖 𝐓𝐎 𝐔𝐒𝐄 𝐇𝐀𝐂𝐊 :- https://t.me/HOW_TO_USE_JAMES_HACK/12\n"
                         "FOR HELP @M4JAMES_HACK_MANAGER"
-                    ),
-                    reply_markup=VIP_BUTTON
+                    )
                 )
-                print(f"APK sent to: {user.id}")
+                print(f"APK sent to: {user.id} (@{user.username})")
             else:
                 print(f"APK cache empty, not sent to: {user.id}")
 
@@ -144,7 +133,7 @@ def main():
     )
 
 
-if __name__ == "__main__":
+if name == "main":
     while True:
         try:
             main()
